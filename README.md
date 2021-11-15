@@ -11,6 +11,6 @@ brew install lzfse, libtasn1
 ./kernelcache_decryptor <kernelcache>
 ```
 
-# ASCIINEMA
+# Demo:
 
 [![asciicast](https://asciinema.org/a/O1YpcchgyhVhOql20c25h4W0O.svg)](https://asciinema.org/a/O1YpcchgyhVhOql20c25h4W0O)
