@@ -37,6 +37,10 @@ int file_get_content(const char *fn, unsigned char **file_data, uint32_t *data_l
 
 int img4_extract(const char *fn, char *payload_type, unsigned char **payload_data, uint32_t *payload_data_length)
 {
+    /*
+     Borrow from qemu-T8030 project and port it to work with mac mini M1
+     */
+    
     unsigned char *file_data;
     uint32_t file_size;
     char errorDescription[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
@@ -98,14 +102,15 @@ int img4_extract(const char *fn, char *payload_type, unsigned char **payload_dat
     *payload_data = NULL;
     *payload_data_length = 0;
     
+    // extract payload_data_length first
     if ((ret = asn1_read_value(img4, "data", *payload_data, (int *)payload_data_length) != ASN1_MEM_ERROR)) {
         fprintf(stderr, "Failed to read the im4p payload in file '%s': %d.", fn, ret);
         free(file_data);
         return ret;
     }
     
+    // extract compressed payload data from IMG4 format
     *payload_data = (unsigned char *)malloc(*payload_data_length);
-    
     if ((ret = asn1_read_value(img4, "data", *payload_data, (int *)payload_data_length) != ASN1_SUCCESS)) {
         fprintf(stderr, "Failed to read the im4p payload in file '%s': %d.", fn, ret);
         free(file_data);
@@ -122,6 +127,7 @@ int img4_extract(const char *fn, char *payload_type, unsigned char **payload_dat
         size_t decode_buffer_size = *payload_data_length * 8;
         uint8_t *decode_buffer = (uint8_t *)malloc(decode_buffer_size);
         
+        // decompress the payload
         int decoded_length = lzfse_decode_buffer(decode_buffer, decode_buffer_size, (const uint8_t *)*payload_data, (size_t)*payload_data_length, NULL);
         if (decoded_length == 0 || decoded_length == decode_buffer_size) {
             fprintf(stderr, "Could not decompress LZFSE-compressed data in file '%s' because the decode buffer was too small.", fn);
@@ -138,7 +144,6 @@ int img4_extract(const char *fn, char *payload_type, unsigned char **payload_dat
     }
     
     free(file_data);
-    
     return 0;
 }
 
